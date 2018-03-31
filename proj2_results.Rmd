@@ -1,11 +1,23 @@
+---
+title: ""
+author: ""
+date: ''
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: no
+---
+
 ## Setup
-As always, packages!
-```{r}
+Analysis was completed in R v3.4.3 [XXX???] using the following packages.
+```{r eval=TRUE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(cowplot)
 ```
 
-Load in "marker_contig_map.tsv" files. For this example, we are using some fake data for norC. Since each depth is in a separate file, we rename the variables so that we can tell them apart when we combine the data frames. We will only need the taxonomy, abundance, and query data.
+Taxonomy, abundance, and query data were loaded from "marker_contig_map.tsv" files obtained from TreeSAPP.
 ```{r message=FALSE}
 
 treesapp.out.dir = "D:/treesapp_out/"
@@ -52,9 +64,9 @@ norC.RNA.200m = read_tsv(paste(treesapp.out.dir, "RNA/200m/final_outputs/marker_
 #     select(Tax.RNA.200 = Confident_Taxonomy, Abund.RNA.200 = Abundance, Query)
 ```
 
-Manipulate the data into a single data frame
+Data were combined into a single data frame.
 ```{r}
-# Combine the data frames will full_join to keep all the data
+# Combine the data frames
 norC.all = norC.DNA.10m %>% 
   full_join(norC.DNA.100m, by = "Query") %>% 
   full_join(norC.DNA.120m, by = "Query") %>% 
@@ -69,7 +81,7 @@ norC.all = norC.DNA.10m %>%
   full_join(norC.RNA.150m, by = "Query") %>% 
   full_join(norC.RNA.165m, by = "Query") %>% 
   full_join(norC.RNA.200m, by = "Query") %>% 
-# Create a taxonomy variable aggregating all taxonomy columns so as to fill in any NAs that might occur. !is.na means "is not NA", so the following says that the Taxonomy data should be taken from Tax.RNA.10 if that is not NA, or else take it from Tax.DNA.10 if that is not NA, or else Tax.RNA.200, etc. until if all are NA, give Taxonomy of "unclassified"
+# Create a taxonomy variable aggregating all taxonomy columns to fill in any NAs
   mutate(Taxonomy = ifelse(!is.na(Tax.DNA.10), Tax.DNA.10,
                     ifelse(!is.na(Tax.DNA.100), Tax.DNA.100,
                     ifelse(!is.na(Tax.DNA.120), Tax.DNA.120,
@@ -85,62 +97,56 @@ norC.all = norC.DNA.10m %>%
                     ifelse(!is.na(Tax.RNA.165), Tax.RNA.165,
                     ifelse(!is.na(Tax.RNA.200), Tax.RNA.200,
                            "unclassified"))))))))))))))) %>% 
-# Get rid of the old Tax variables
+# Remove old Tax variables
   select(-starts_with("Tax.")) %>% 
 # Gather all the abundance data into 1 column 
   gather("Key", "Abundance", starts_with("Abund")) %>% 
-# Turn the Key into Depth and RNA/DNA variables. We can easily do this because we specifically named these variables with period separation when we loaded in the original data
+# Turn the Key into Depth and RNA/DNA variables
   separate(Key, c("Key","Type","Depth_m"), by = ".") %>% 
-# Remove Key variable now that it only contains "Abund". This also serves to reorder the columns so that the very long Query is at the end.
+# Remove Key variable and reorder the columns with Queryat the end
   select(Depth_m, Type, Abundance, Taxonomy, Query) %>% 
-# Make sure R knows depth is numerical since it came from a character variable
+# Make depth numerical
   mutate(Depth_m = as.numeric(Depth_m)) %>% 
-# Separate Taxonomy into columns so we can plot at different levels
+# Separate Taxonomy into columns
   separate(Taxonomy, into = c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species"), sep="; ")
 ```
 
-The warning from the above is fine. It tells us that not all queries could be classified down to the species level so these cells are filled in with NA.
+Note that not all queries could be classified down to the species level, so those cells were filled in with NA.
 
-Now, this was a lot of data manipulation and will be even longer with 14 tables. So we understand if you prefer to do it in Excel... But look how pretty!
-```{r}
-norC.all
-```
+# Results
 
-## Example plots
-### How does the DNA abundance of your gene of interest differ with depth?
+## NorC DNA and RNA Abundance with Depth
+
 ```{r}
 norC.all %>% 
-# Filter the DNA data
-  filter(Type == "DNA") %>% 
-# Change NAs to "unclassified" at the level you want to plot. Here we will do Genus
-  mutate(Genus = ifelse(is.na(Genus), "unclassified", Genus)) %>% 
-  
-ggplot(aes(x = "norC", y = Depth_m)) +
-# Use the size aesthetic to show abundance
-  geom_point(aes(size = Abundance)) +
-# Reverse the why axis so depth increases going down
-  scale_y_reverse(lim=c(200,10)) +
-  labs(title = "Abundance of the norC gene (DNA) at different depths",
-       x = "") +
-  theme_classic()
-```
 
-### How does the RNA abundance of your gene of interest differ with depth? Is this similar to the DNA levels?
-```{r}
-norC.all %>% 
-# Change NAs to "unclassified" at the level you want to plot
-  mutate(Genus = ifelse(is.na(Genus), "unclassified", Genus)) %>% 
-
-# Show both RNA and DNA using an x variable  
 ggplot(aes(x = Type, y = Depth_m)) +
   geom_point(aes(size = Abundance)) +
   scale_y_reverse(lim=c(200,10)) +
   labs(title = "Abundance of the norC gene (DNA vs. RNA) at different depths",
        x = "") +
   theme_classic()
+
+# TODO remove, here because I found the Abundances strange. I don't know how ggplot plots them, because it's not just summing up...
+norC.all %>%
+  group_by(Depth_m, Type) %>%
+  filter(!is.na(Abundance)) %>%
+  summarize(Abundance = sum(Abundance)) %>%
+
+ggplot(aes(x = Type, y = Depth_m)) +
+  geom_point(aes(size = Abundance)) +
+  scale_y_reverse(lim=c(200,10)) +
+  labs(title = "Abundance of the norC gene (DNA vs. RNA) at different depths",
+       x = "") +
+  theme_classic()
+
 ```
 
-### What taxa are responsible for your gene of interest? Are they the same with depth? With DNA versus RNA?
+The abundance of norC differs with depth. For DNA the abundance is increasing with depth until 150m, where it is maximal. Then the abundance abruptly drops at 165m, and then is relatively high again at 200m. For RNA, norC abundance is relatively low up to depth 135m, only slowly increasing. Then the abundance is notably greater at 150m, and maximum RNA abundance is reached at 165m. Then RNA abundance decreases again at 200m.  
+
+The graph shows that the abundance of DNA differs from the abundance of RNA. DNA abundance is notably higher at depths up to depth 150m. DNA abundance is maximal at 150m, where RNA abundance is lower, and RNA abundance is maximal at 165m, where DNA abundance is quite low. 
+
+## What taxa are responsible for your gene of interest? Are they the same with depth? With DNA versus RNA?
 ```{r}
 norC.all %>% 
 # Change NAs to "unclassified" at the level you want to plot
@@ -172,7 +178,7 @@ ggplot(aes(x = Genus, y = Depth_m)) +
   scale_size_continuous(name = "Abundance")
 ```
 
-### How does the abundance of your gene of interest relate to nitrogen species in Saanich?
+## How does the abundance of your gene of interest relate to nitrogen species in Saanich?
 
 Load in data from project 1 and pull out the geochemical metadata.
 ```{r}

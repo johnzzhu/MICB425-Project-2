@@ -276,10 +276,10 @@ plot_grid(plot_NO3, plot_NO2, plot_N2O, plot_NH4, plot_abd_depth,
 
 Plotting abundance vs N species concentration
 
-``` {r fig.width=8, fig.height=4}
+``` {r fig.width=12, fig.height=8}
 
 gene_abd_depth_meta = metadata %>% 
-  select(Depth_m, NH4_uM, NO2_uM, NO3_uM) %>% 
+  select(Depth_m, NH4_uM, N2O_nM, NO2_uM, NO3_uM) %>% 
   gather(Nutrient,uM,-Depth_m) %>% 
   full_join(gene_abd_depth, by = "Depth_m")
 
@@ -290,13 +290,19 @@ ggplot(gene_abd_depth_meta, aes(x = uM, y=Abundance)) +
 
 ```
 
-Correlating RNA abundance with NO3 and NH4
+Correlating RNA abundance with NO3, N2O & NH4
 
 ``` {r}
 metadata %>% 
   full_join(gene_abd_depth, by = "Depth_m") %>% 
   filter(Type == "RNA") %>% 
   lm(Abundance ~ NH4_uM, .) %>% 
+  summary()
+
+metadata %>% 
+  full_join(gene_abd_depth, by = "Depth_m") %>% 
+  filter(Type == "RNA") %>% 
+  lm(Abundance ~ N2O_nM, .) %>% 
   summary()
 
 metadata %>% 

@@ -12,6 +12,11 @@ output:
 
 # Methods
 
+NorC DNA & RNA abuundance was plotted against depth.
+Abundances were stratified at the family and class levels.
+NorC RNA abundance was correlated with NO3, N2O and NH4.
+Abundances were also correlated with nitrogen species NH4, N2O, NO2, and NO3.
+
 ## Setup 
 
 Analysis was completed in R v3.4.3 [???] using the following packages.
@@ -59,7 +64,7 @@ norC.RNA.200m = read_tsv(paste(treesapp.out.dir, "RNA/200m/final_outputs/marker_
   select(Tax.RNA.200 = Confident_Taxonomy, Abund.RNA.200 = Abundance, Query)
 ```
 
-Data were combined into a single data frame.
+Data was combined into a single data frame.
 ```{r, warning=FALSE}
 # Combine the data frames
 norC.all = norC.DNA.10m %>% 
@@ -106,9 +111,9 @@ norC.all = norC.DNA.10m %>%
   separate(Taxonomy, into = c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species"), sep="; ")
 ```
 
-Note that not all queries could be classified down to the species level, so those cells were filled in with NA.
+Note that not all queries could be classified at the species level, so those cells were filled in with NA.
 
-Geochemical data from cruise 72 (???) were loaded in order to draw correlations with norC abundance.
+Geochemical data from cruise 72 (Aug 1, 2012) was loaded in order to draw correlations with norC abundance.
 
 ```{r}
 load("mothur_phyloseq.RData")
@@ -145,7 +150,7 @@ ggplot(gene_abd_depth, aes(x = Type, y = Depth_m)) +
   geom_point(aes(size = Abundance)) +
   geom_text(aes(label = Abundance, hjust = -0.5)) +
   scale_y_reverse(lim=c(200,10)) +
-  labs(caption = "Figure ??? FPKM abundance (value labels) of norC \nat the genome and expression level across different \ndepths.", x = NULL) + 
+  labs(caption = "Figure ??? RPKM abundance (value labels) of norC \nat the genome and expression level across different \ndepths.", x = NULL) + 
   theme(legend.position="none", plot.caption = element_text(size = 12, hjust = 0), plot.margin=margin(0,40,0,20))
 
 ```
@@ -178,7 +183,7 @@ ggplot(aes(x = Family, y = Depth_m)) +
 # Make 0 values not show up, keep points from overlapping
   geom_point(aes(size = Abundance, color = Type), position = position_dodge(0.6)) +
   scale_y_reverse(lim=c(200,10)) +
-  labs(caption = "Figure ??? FPKM abundance of norC stratified at the family level. Abundance is \nshown at both the genome and expression level across different depths. The size of \neach circle is proportional to abundance.", x = "Family") + 
+  labs(caption = "Figure ??? RPKM abundance of norC stratified at the family level. Abundance is \nshown at both the genome and expression level across different depths. The size of \neach circle is proportional to abundance.", x = "Family") + 
   theme(axis.text.x = element_text(angle = 20, hjust = 1), plot.caption = element_text(size = 12, hjust = 0),plot.margin= margin(0,0,0,20))
 ```
 
@@ -198,7 +203,7 @@ ggplot(aes(x = Class, y = Depth_m)) +
 # Make 0 values not show up, keep points from overlapping
   geom_point(aes(size = Abundance, color = Type), position = position_dodge(0.6)) +
   scale_y_reverse(lim=c(200,10)) +
-  labs(caption = "Figure ??? FPKM abundance of norC stratified at the class level. Abundance is \nshown at both the genome and expression level across different depths. The size of \neach circle is proportional to abundance.", x = "Class") + 
+  labs(caption = "Figure ??? RPKM abundance of norC stratified at the class level. Abundance is \nshown at both the genome and expression level across different depths. The size of \neach circle is proportional to abundance.", x = "Class") + 
   theme(axis.text.x = element_text(angle = 20, hjust = 1), plot.caption = element_text(size = 12, hjust = 0),plot.margin= margin(0,0,0,20))
 ```
 
@@ -211,19 +216,6 @@ plot_abd_depth = ggplot(gene_abd_depth, aes(x = Type, y = Depth_m)) +
   scale_y_reverse(lim=c(200,10)) +
   labs(x = "", y = NULL) + 
   theme(plot.margin = unit(c(0,0,0.55,0), "cm"))
-
-# John: I want to use the plot without the Genera (just DNA/RNA) because the x labels don't play well, so this plot ends up being shorter than the other ones which makes the y axis not match up. besides we have the genera breakdown in its own plot already
-
-# plot1 = norC.all %>% 
-# # Change NAs to "unclassified" at the level you want to plot
-#   mutate(Genus = ifelse(is.na(Genus), "unclassified", Genus)) %>% 
-#   
-# ggplot(aes(x = Genus, y = Depth_m)) +
-#   geom_point(aes(size = ifelse(Abundance == 0, NA, Abundance), color = Type), position = position_dodge(0.5)) +
-#   scale_y_reverse(lim=c(200,10)) +
-#   labs(y = "") +
-#   theme(axis.text.x = element_text(angle = 90)) +
-#   scale_size_continuous(name = "Abundance")
 ```
 
 
@@ -279,50 +271,59 @@ plot_grid(plot_NO3, plot_NO2, plot_N2O, plot_NH4, plot_abd_depth,
           nrow = 1, 
           rel_widths=c(1.2,1,1,1,1.95))
 ```
+**Figure ???** Nitrogen species concentrations across depths (A-D) compared to norC abundances at both the genome and expression levels (E; reproduced from Figure ???)
 
-The relation between norC abundance and nitrogen species was examined.
 
-``` {r fig.width=12, fig.height=8}
+The relation between norC abundance and nitrogen species was examined. NO3 and N2O concentrations were seen to peak at 100m. NO2 decreased with depth, while NH4 was only present at greater depths.
+
+```{r fig.width=12, fig.height=6}
 
 gene_abd_depth_meta = metadata %>% 
-  select(Depth_m, NH4_uM, N2O_nM, NO2_uM, NO3_uM) %>% 
+  mutate(N2O_uM = N2O_nM / 1000) %>% 
+  select(Depth_m, NH4_uM, N2O_uM, NO2_uM, NO3_uM) %>% 
+  rename("NH4 (uM)" = NH4_uM) %>% 
+  rename("N2O (uM)" = N2O_uM) %>% 
+  rename("NO2 (uM)" = NO2_uM) %>% 
+  rename("NO3 (uM)" = NO3_uM) %>% 
   gather(Nutrient,uM,-Depth_m) %>% 
-  full_join(gene_abd_depth, by = "Depth_m")
+  full_join(gene_abd_depth, by = "Depth_m") %>% 
+  unite(Type_Nutrient, Type, Nutrient, sep = " - ") %>% 
+  arrange(desc(Type_Nutrient))
 # TODO not all are uM so x axis shouldn't be um
 ggplot(gene_abd_depth_meta, aes(x = uM, y=Abundance)) +
   geom_point() +
-  facet_wrap(~Type + Nutrient, scales="free") +
+  facet_wrap(~Type_Nutrient, scales="free", ncol = 4) +
   geom_smooth(method='lm') +
-  labs(caption = "Figure ??? FPKM abundance of norC at different nitrogen species concentrations. Abundance is shown at both the genome and expression level.") + 
+  labs(caption = "Figure ??? RPKM abundance of norC at different nitrogen species concentrations. Abundance is shown at both the genome and expression level.",
+       y = "Abundance", x = "Concentration (uM)") + 
   theme(plot.caption = element_text(size = 12, hjust = 0))
 
 ```
 
-NorC RNA abundance was correlated with NO3, N2O and NH4.
+The presence and expression of the norC gene was only positively associated with NH4 levels, while all other correlations revealed negative trends.
 
-``` {r}
-RNA_abd_meta = metadata %>% 
-  full_join(gene_abd_depth, by = "Depth_m") %>% 
-  filter(Type == "RNA")
+```{r}
+RNA_abundance = data.frame(matrix(ncol = 5, nrow= 0))
 
-nh4_lm = RNA_abd_meta %>% 
-  lm(Abundance ~ NH4_uM, .) %>% 
-  summary()
+for (type_nutrient in unique(gene_abd_depth_meta$Type_Nutrient)) {
+  # get the summary of lm()
+  summ = gene_abd_depth_meta %>%
+    filter(Type_Nutrient == type_nutrient) %>% 
+    lm(Abundance ~ uM, .) %>%
+    summary()
+  # pull out the stats values of the slope
+  coef = summ$coefficients["uM",]
+  # convert into a data frame
+  coef_data_frame = data.frame(coef=matrix(coef),row.names=names(coef))
+  # add to table
+  RNA_abundance[nrow(RNA_abundance) + 1,] <-c(type_nutrient, round(coef_data_frame[,1], 4))
+}
 
-n2o_lm = RNA_abd_meta %>% 
-  lm(Abundance ~ N2O_nM, .) %>% 
-  summary()
-
-no3_lm = RNA_abd_meta %>% 
-  lm(Abundance ~ NO3_uM, .) %>% 
-  summary()
-
-RNA_abundance = data.frame("_" = numeric(0), "_"= numeric(0),"_"= numeric(0),"_"= numeric(0))
-RNA_abundance <- rbind(RNA_abundance, nh4_lm$coefficients['NH4_uM',])
-RNA_abundance <- rbind(RNA_abundance, n2o_lm$coefficients['N2O_nM',])
-RNA_abundance <- rbind(RNA_abundance, no3_lm$coefficients['NO3_uM',])
-rownames(RNA_abundance) <- (c("NH4_uM", "N2O_uM","NO3_uM"))
-colnames(RNA_abundance) <- (c("Estimate", "Std. Error","t value","Pr(>|t|) (p-value)"))
-kable(RNA_abundance,caption="Table ??? Correlation Data of norC RNA Abundance Across Nitrogen Species Concentrations.")
+colnames(RNA_abundance) <- (c("Correlation", "Estimate", "Std. Error","t value","Pr(>|t|) (p-value)"))
+kable(RNA_abundance,caption="Table ??? Correlation of norC Abundance Across Nitrogen Species Concentrations.")
 
 ```
+
+NorC expression was found to significantly correlate to NH4 levels (p = 0.0047). No other significant correlations were found at either the genome or the expression level.  
+
+Expression level significances (p = 0.0047-0.2728) were also higher than those of the genome level (p = 0.2021-0.9512). 

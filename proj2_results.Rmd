@@ -31,7 +31,7 @@ library(knitr)
 Taxonomy, abundance, and query data were loaded from "marker_contig_map.tsv" files obtained from TreeSAPP.
 ```{r message=FALSE}
 
-treesapp.out.dir = "D:/treesapp_out/"
+treesapp.out.dir = "./treesapp_out_gene_tax_abd/"
 
 norC.DNA.10m = read_tsv(paste(treesapp.out.dir, "dna/10m/final_outputs/marker_contig_map.tsv", sep="")) %>% 
   select(Tax.DNA.10 = Confident_Taxonomy, Abund.DNA.10 = Abundance, Query)

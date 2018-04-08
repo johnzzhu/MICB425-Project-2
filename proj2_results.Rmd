@@ -126,19 +126,6 @@ metadata = data.frame(mothur@sam_data)
 
 ```{r fig.width=5, fig.height=4}
 
-# norC.all %>%
-# 
-# ggplot(aes(x = Type, y = Depth_m)) +
-#   geom_point(aes(size = Abundance)) +
-#   # geom_label(aes(label = t)) +
-#   scale_y_reverse(lim=c(200,10)) +
-#   labs(title = "Abundance of the norC gene (DNA vs. RNA) at different depths",
-#        x = "") +
-#   theme_classic()
-
-
-# TODO remove, here because I found the Abundances strange. I don't know how ggplot plots them, because it's not just summing up...
-
 gene_abd_depth = norC.all %>% 
   group_by(Depth_m, Type) %>% 
   filter(!is.na(Abundance)) %>%
@@ -161,19 +148,14 @@ The abundance of norC differs with depth. No norC gene was found at either the g
 The graph shows that the abundance of DNA differs from the abundance of RNA. DNA abundance is notably higher at depths up to depth 150m. DNA abundance is maximal at 150m, where RNA abundance is lower, and RNA abundance is maximal at 165m, where DNA abundance is quite low. 
 
 ## Families Responsible for norC Abundance
-```{r fig.width=7, fig.height=5}
-# TODO remove
-# norC.all %>% 
-# # Change NAs to "unclassified"
-#   mutate(Genus = ifelse(is.na(Genus), "unclassified", Genus)) %>% 
-# 
-# ggplot(aes(x = Genus, y = Depth_m)) +
-# # Make 0 values not show up, keep points from overlapping
-#   geom_point(aes(size = ifelse(Abundance == 0, NA, Abundance), color = Type), position = position_dodge(0.6)) +
-#   scale_y_reverse(lim=c(200,10)) +
-#   labs(title = "Abundance of norC (DNA & RNA) by genera across depths", x = NULL, y = NULL) + 
-#   theme(axis.text.x = element_text(angle = 20, hjust = 1), legend.position="none", plot.title=element_text(size=12))
+![](itol_rna_zoom.png)
+**Figure ???**
+FPKM RNA abundance (coloured bars from purple to red) of norC expression across sample depth with respect to taxonomic assignments. Selected clades are numbered (1: Gammaproteobacteria; 2: Epsilonproteobacteria; 3: Ardenticatenia; 4: Clostridia; 5: Negativicutes). FPKM bar heights are relative within the same colour only. NorC expression is not observed in species outside of what is shown.  
+<br><br>
 
+The expression of norC is observed to be localized to a few clades. Clades with the highest levels of norC expression are variable with respect to depth. Epsilonproteobacteria and Ardenticatenia were observed to have greater expression at 135m or above, while Gammaproteobacteria expression is more biased towards greater depths.
+
+```{r fig.width=7, fig.height=5}
 norC.all %>% 
 # Change NAs to "unclassified"
   mutate(Family = ifelse(is.na(Family), "unclassified", Family)) %>% 
@@ -210,7 +192,6 @@ ggplot(aes(x = Class, y = Depth_m)) +
 ## NorC Abundance and Nitrogen Species
 
 ```{r}
-
 plot_abd_depth = ggplot(gene_abd_depth, aes(x = Type, y = Depth_m)) +
   geom_point(aes(size = Abundance)) +
   scale_y_reverse(lim=c(200,10)) +

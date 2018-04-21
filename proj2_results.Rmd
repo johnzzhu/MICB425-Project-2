@@ -12,10 +12,7 @@ output:
 
 # Methods
 
-NorC DNA & RNA abuundance was plotted against depth.
-Abundances were stratified at the family and class levels.
-NorC RNA abundance was correlated with NO3, N2O and NH4.
-Abundances were also correlated with nitrogen species NH4, N2O, NO2, and NO3.
+The difference in the abundance of *norC* DNA and RNA with depth was examined by plotting the abundances at the different depths. Both abundances were then stratified at the family and class level as well. The presence of *norC* RNA was then examined in relation to N2O, NH4, NO2, and NO3 at the different depths. The abundances were also correlated with nitrogen species N2O, NH4, NO2, and NO3 using a linear model.
 
 ## Setup 
 
@@ -30,11 +27,14 @@ library(knitr)
 
 Taxonomy, abundance, and query data were loaded from "marker_contig_map.tsv" files obtained from TreeSAPP.
 ```{r message=FALSE}
-
 treesapp.out.dir = "./treesapp_out_gene_tax_abd/"
-
+# Example data loading
 norC.DNA.10m = read_tsv(paste(treesapp.out.dir, "dna/10m/final_outputs/marker_contig_map.tsv", sep="")) %>% 
   select(Tax.DNA.10 = Confident_Taxonomy, Abund.DNA.10 = Abundance, Query)
+```
+
+```{r message=FALSE, echo=FALSE}
+# Rest of data loading
 norC.DNA.100m = read_tsv(paste(treesapp.out.dir, "dna/100m/final_outputs/marker_contig_map.tsv", sep="")) %>% 
   select(Tax.DNA.100 = Confident_Taxonomy, Abund.DNA.100 = Abundance, Query)
 norC.DNA.120m = read_tsv(paste(treesapp.out.dir, "dna/120m/final_outputs/marker_contig_map.tsv", sep="")) %>% 
@@ -64,7 +64,7 @@ norC.RNA.200m = read_tsv(paste(treesapp.out.dir, "RNA/200m/final_outputs/marker_
   select(Tax.RNA.200 = Confident_Taxonomy, Abund.RNA.200 = Abundance, Query)
 ```
 
-Data was combined into a single data frame.
+Data were combined into a single data frame.
 ```{r, warning=FALSE}
 # Combine the data frames
 norC.all = norC.DNA.10m %>% 
@@ -113,7 +113,7 @@ norC.all = norC.DNA.10m %>%
 
 Note that not all queries could be classified at the species level, so those cells were filled in with NA.
 
-Geochemical data from cruise 72 (Aug 1, 2012) was loaded in order to draw correlations with norC abundance.
+Geochemical data from cruise 72 (Aug 1, 2012) were loaded in order to draw correlations with *norC* abundance.
 
 ```{r}
 load("mothur_phyloseq.RData")
@@ -122,76 +122,90 @@ metadata = data.frame(mothur@sam_data)
 
 # Results
 
-## NorC DNA and RNA Abundance with Depth
+## *NorC* DNA and RNA Abundance with Depth
 
 ```{r fig.width=5, fig.height=4}
-
+# Save gene abundance data
 gene_abd_depth = norC.all %>% 
+  # Group data by depth and type (RNA/DNA)
   group_by(Depth_m, Type) %>% 
+  # Filter out NAs
   filter(!is.na(Abundance)) %>%
+  # Sum up the abundance data for each depth for RNA and DNA
   summarize(Abundance = sum(Abundance)) %>% 
+  # Round the sums
   mutate(Abundance = round(Abundance, digits = 2)) 
-#%>% mutate(Abundance = ifelse(Abundance == 0, NA, Abundance))
 
+# Plot the abundance data
 ggplot(gene_abd_depth, aes(x = Type, y = Depth_m)) +
   geom_point(aes(size = Abundance)) +
   geom_text(aes(label = Abundance, hjust = -0.5)) +
   scale_y_reverse(lim=c(200,10)) +
-  labs(caption = "Figure ??? RPKM abundance (value labels) of norC \nat the genome and expression level across different \ndepths.", x = NULL) + 
-  theme(legend.position="none", plot.caption = element_text(size = 12, hjust = 0), plot.margin=margin(0,40,0,20))
+  labs(x = NULL) + 
+  theme(legend.position="none")
 
 ```
 
-
-The abundance of norC differs with depth. No norC gene was found at either the genome or expression level above 100m. For DNA the abundance is increasing with depth until 150m, where it is maximal. Then the abundance abruptly drops at 165m, and then is relatively high again at 200m. For RNA, norC abundance is relatively low up to depth 135m, only slowly increasing. Then the abundance is notably greater at 150m, and maximum RNA abundance is reached at 165m. Then RNA abundance decreases again at 200m.  
-
-The graph shows that the abundance of DNA differs from the abundance of RNA. DNA abundance is notably higher at depths up to depth 150m. DNA abundance is maximal at 150m, where RNA abundance is lower, and RNA abundance is maximal at 165m, where DNA abundance is quite low. 
-
-## Families Responsible for norC Abundance
-![](itol_rna_zoom.png)
-**Figure ???**
-FPKM RNA abundance (coloured bars from purple to red) of norC expression across sample depth with respect to taxonomic assignments. Selected clades are numbered (1: Gammaproteobacteria; 2: Epsilonproteobacteria; 3: Ardenticatenia; 4: Clostridia; 5: Negativicutes). FPKM bar heights are relative within the same colour only. NorC expression is not observed in species outside of what is shown.  
+**Figure 1** RPKM abundance (value labels) of *norC* at the genome and expression level across different depths for samples obtained at Saanich Inlet.
 <br><br>
 
-The expression of norC is observed to be localized to a few clades. Clades with the highest levels of norC expression are variable with respect to depth. Epsilonproteobacteria and Ardenticatenia were observed to have greater expression at 135m or above, while Gammaproteobacteria expression is more biased towards greater depths.
+The abundance of *norC* differs with depth (Figure 1). No *norC* was found at either the genome or expression level at 10m. For DNA the abundance is increasing with depth until 150m, where it is maximal. Then the abundance abruptly drops at 165m, and then is relatively high again at 200m. For RNA, *norC* abundance is relatively low up to depth 135m, only slowly increasing. Then the abundance is notably greater at 150m, and maximum RNA abundance is reached at 165m. Then RNA abundance decreases again at 200m.  
 
-```{r fig.width=7, fig.height=5}
+The graph shows that the abundance of DNA differs from the abundance of RNA. DNA abundance is notably higher at depths up to depth 150m. DNA abundance is maximal at 150m, where RNA abundance is lower, and RNA abundance is maximal at 165m, where DNA abundance is quite low. We see about the same amount of *norC* RNA and DNA at 200m.
+
+## Taxa Responsible for *norC* Abundance
+
+```{r warning=FALSE, fig.width=7, fig.height=5}
 norC.all %>% 
-# Change NAs to "unclassified"
+  # Change NAs to "unclassified"
   mutate(Family = ifelse(is.na(Family), "unclassified", Family)) %>% 
+  # Remove 0 abundance
   mutate(Abundance = ifelse(Abundance == 0, NA, Abundance)) %>%
 
+# Plot the data
 ggplot(aes(x = Family, y = Depth_m)) +
-# Make 0 values not show up, keep points from overlapping
+  # Keep points from overlapping
   geom_point(aes(size = Abundance, color = Type), position = position_dodge(0.6)) +
   scale_y_reverse(lim=c(200,10)) +
-  labs(caption = "Figure ??? RPKM abundance of norC stratified at the family level. Abundance is \nshown at both the genome and expression level across different depths. The size of \neach circle is proportional to abundance.", x = "Family") + 
-  theme(axis.text.x = element_text(angle = 20, hjust = 1), plot.caption = element_text(size = 12, hjust = 0),plot.margin= margin(0,0,0,20))
+  labs(x = "Family") + 
+  theme(axis.text.x = element_text(angle = 20, hjust = 1), plot.margin= margin(0,0,0,20))
 ```
 
-In total seven fully classified families were found to contribute to the norC DNA and RNA levels, along with some unclassified *Thiotrichales* and fully unclassified organisms. All classified families that contribute some amount to the DNA levels, were found to also contribute a nonzero amount to the RNA levels.  
+**Figure 2** RPKM abundance of *norC* stratified at the family level. Abundance is shown at both the genome and expression level across different depths. The size of each circle is proportional to abundance.
+<br><br>
 
-A different number of classified families was found to contribute to the DNA and RNA levels at different depths. The smallest number of classified families, only three, contribute at depths of 100m, 120m, and 165m, while the biggest number of classified families, six, contribute at a depth of 150m. Some families were found to contribute to norC levels only at one depth, while others contribute at more depths.  
+In total seven fully classified families were found to contribute to the *norC* DNA and RNA levels, along with some unclassified Thiotrichales and fully unclassified organisms (Figure 2). All classified families that contribute some amount to the DNA levels, were found to also contribute a nonzero amount to the RNA levels.  
 
-At every depth, the family *Candidatus Thioglobus* was found to contribute the most to norC DNA abundance, while the second biggest contributors were unclassified organisms. The biggest contributors to RNA abundance at the majority of depths were found to be unclassified organisms. This is while at depth 200m *Helicobacteraceae* contribute the most to RNA abundance.  
+A different number of classified families was found to contribute to the DNA and RNA levels at different depths. The smallest number of classified families, only three, contribute at depths of 100m, 120m, and 165m, while the biggest number of classified families, six, contribute at a depth of 150m. Some families were found to contribute to *norC* levels only at one depth, while others contribute at more depths.  
 
-```{r}
+At every depth, the family Candidatus Thioglobus was found to contribute the most to *norC* DNA abundance, while the second biggest contributors were unclassified organisms. The biggest contributors to RNA abundance at the majority of depths were found to be unclassified organisms. This is while at depth 200m Helicobacteraceae contribute the most to RNA abundance.  
+
+```{r warning=FALSE, fig.width=7, fig.height=5}
 norC.all %>% 
-# Change NAs to "unclassified"
+  # Change NAs to "unclassified"
   mutate(Class = ifelse(is.na(Class), "unclassified", Class)) %>% 
+  # Remove 0 abundance
   mutate(Abundance = ifelse(Abundance == 0, NA, Abundance)) %>%
 
 ggplot(aes(x = Class, y = Depth_m)) +
-# Make 0 values not show up, keep points from overlapping
+  # Keep points from overlapping
   geom_point(aes(size = Abundance, color = Type), position = position_dodge(0.6)) +
   scale_y_reverse(lim=c(200,10)) +
-  labs(caption = "Figure ??? RPKM abundance of norC stratified at the class level. Abundance is \nshown at both the genome and expression level across different depths. The size of \neach circle is proportional to abundance.", x = "Class") + 
-  theme(axis.text.x = element_text(angle = 20, hjust = 1), plot.caption = element_text(size = 12, hjust = 0),plot.margin= margin(0,0,0,20))
+  labs(x = "Class") + 
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
 ```
 
-## NorC Abundance and Nitrogen Species
+**Figure 3** RPKM abundance of *norC* stratified at the class level. Abundance is shown at both the genome and expression level across different depths. The size of each circle is proportional to abundance.
+<br><br>
+
+Viewed at the class level, it can be seen that the unclassified organisms responsible for most of the RNA are of the class Gammaproteobacteria (Figure 3).
+
+These patterns can also be seen by visualizing the data on iTOL (sample in Appendix Figure A1). The expression of *norC* is observed to be localized to a few classes. Classes with the highest levels of *norC* expression are variable with respect to depth. Epsilonproteobacteria and Ardenticatenia were observed to have greater expression at 135m or lower, while Gammaproteobacteria expression is more biased towards greater depths.
+
+## *NorC* Abundance and Nitrogen Species
 
 ```{r}
+# Save plot of abundance data
 plot_abd_depth = ggplot(gene_abd_depth, aes(x = Type, y = Depth_m)) +
   geom_point(aes(size = Abundance)) +
   scale_y_reverse(lim=c(200,10)) +
@@ -204,107 +218,140 @@ plot_abd_depth = ggplot(gene_abd_depth, aes(x = Type, y = Depth_m)) +
 # Order the data by depth
 metadata_depth = metadata %>% arrange(Depth_m)
 
+# Example plot code
+# Save plot for NO3 metadata as it changes with depth
 plot_NO3 = metadata_depth %>% 
 ggplot(aes(x = NO3_uM, y = Depth_m)) +
   geom_point() +
   geom_path(aes(group = 1)) +
   scale_y_reverse(lim=c(200,10)) +
-  labs(y = "Depth (m)",
-       x = "NO3 (uM)") +
+  labs(y = "Depth (m)", x = "NO3 (uM)") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         plot.margin = unit(c(0,0.1,0.3,0), "cm"))
+```
 
+
+```{r, echo=FALSE}
+# Save plot for NO2 metadata as it changes with depth
 plot_NO2 = metadata_depth %>% 
 ggplot(aes(x = NO2_uM, y = Depth_m)) +
   geom_point() +
   geom_path(aes(group = 1)) +
   scale_y_reverse(lim=c(200,10)) +
-  labs(y = NULL,
-       x = "NO2 (uM)") +
+  labs(y = NULL, x = "NO2 (uM)") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         plot.margin = unit(c(0,0.1,0,0), "cm"))
 
+# Save plot for NH4 metadata as it changes with depth
 plot_NH4 = metadata_depth %>% 
 ggplot(aes(x = NH4_uM, y = Depth_m)) +
   geom_point() +
   geom_path(aes(group = 1)) +
   scale_y_reverse(lim=c(200,10)) +
-  labs(y = NULL,
-       x = "NH4 (uM)") +
+  labs(y = NULL, x = "NH4 (uM)") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         plot.margin = unit(c(0,0.1,0.5,0), "cm"))
 
+# Save plot for N2O metadata as it changes with depth
 plot_N2O = metadata_depth %>% 
 ggplot(aes(x = N2O_nM, y = Depth_m)) +
   geom_point() +
   geom_path(aes(group = 1)) +
   scale_y_reverse(lim=c(200,10)) +
-  labs(y = NULL,
-       x = "N2O (nM)") +
+  labs(y = NULL, x = "N2O (nM)") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        plot.margin = unit(c(0,0.1,0.3,0), "cm"))
+
+# Save plot for O2 metadata as it changes with depth
+plot_O2 = metadata_depth %>% 
+ggplot(aes(x = O2_uM, y = Depth_m)) +
+  geom_point() +
+  geom_path(aes(group = 1)) +
+  scale_y_reverse(lim=c(200,10)) +
+  labs(y = NULL, x = "O2 (uM)") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         plot.margin = unit(c(0,0.1,0.3,0), "cm"))
 ```
 
 ```{r fig.width=8, fig.height=4}
 # Create composite figure
-plot_grid(plot_NO3, plot_NO2, plot_N2O, plot_NH4, plot_abd_depth, 
-          labels=c("A", "B", "C", "D", "E"), 
+plot_grid(plot_N2O, plot_NH4, plot_NO2, plot_NO3, plot_O2, plot_abd_depth, 
+          labels=c("A", "B", "C", "D", "E", "F"), 
           nrow = 1, 
-          rel_widths=c(1.2,1,1,1,1.95))
+          rel_widths=c(1.2,1,1,1,1,2.4))
 ```
-**Figure ???** Nitrogen species concentrations across depths (A-D) compared to norC abundances at both the genome and expression levels (E; reproduced from Figure ???)
 
+**Figure 4** Nitrogen species and oxygen concentrations across depth (A-E) compared to *norC* abundance at both the genome and expression level (F; reproduced from Figure 1)
+<br><br>
 
-The relation between norC abundance and nitrogen species was examined. NO3 and N2O concentrations were seen to peak at 100m. NO2 decreased with depth, while NH4 was only present at greater depths.
+The relation between *norC* abundance and nitrogen species and oxygen was examined (Figure 4). NO3 and N2O concentrations are seen to peak at 100m, where some *norC* DNA is observed, but not much *norC* RNA. NO3 and N2O then decrease with greater depth, as DNA and RNA levels increase. NO2 is relatively constant, between about 0.05uM to 0.10uM, at depths 100m to 165m, where *norC* DNA and RNA levels increase. This is while NH4 increases in concentration with depth, starting at a depth of 150m, seemingly higher as RNA levels rise. There was lower oxygen concentration where there was a higher RNA abundance. These possible relationships were further examined with linear models.
 
-```{r fig.width=12, fig.height=6}
-
+```{r fig.width=12, fig.height=7}
+# Combine gene abundance data with metadata
 gene_abd_depth_meta = metadata %>% 
+  # Change N2O to also be in uM like the others
   mutate(N2O_uM = N2O_nM / 1000) %>% 
-  select(Depth_m, NH4_uM, N2O_uM, NO2_uM, NO3_uM) %>% 
+  # Select columns of interest
+  select(Depth_m, NH4_uM, N2O_uM, NO2_uM, NO3_uM, O2_uM) %>% 
+  # Rename the columns
   rename("NH4 (uM)" = NH4_uM) %>% 
   rename("N2O (uM)" = N2O_uM) %>% 
   rename("NO2 (uM)" = NO2_uM) %>% 
   rename("NO3 (uM)" = NO3_uM) %>% 
+  rename("O2 (uM)" = O2_uM) %>% 
+  # Join the abundance data and metadata
   gather(Nutrient,uM,-Depth_m) %>% 
   full_join(gene_abd_depth, by = "Depth_m") %>% 
   unite(Type_Nutrient, Type, Nutrient, sep = " - ") %>% 
   arrange(desc(Type_Nutrient))
-# TODO not all are uM so x axis shouldn't be um
+
+# Plot the data
 ggplot(gene_abd_depth_meta, aes(x = uM, y=Abundance)) +
   geom_point() +
-  facet_wrap(~Type_Nutrient, scales="free", ncol = 4) +
+  facet_wrap(~Type_Nutrient, scales="free", ncol = 5) +
   geom_smooth(method='lm') +
-  labs(caption = "Figure ??? RPKM abundance of norC at different nitrogen species concentrations. Abundance is shown at both the genome and expression level.",
-       y = "Abundance", x = "Concentration (uM)") + 
-  theme(plot.caption = element_text(size = 12, hjust = 0))
-
+  labs(y = "Abundance", x = "Concentration (uM)") +
+  theme(text = element_text(size=18))
 ```
 
-The presence and expression of the norC gene was only positively associated with NH4 levels, while all other correlations revealed negative trends.
+**Figure 5** RPKM abundance of *norC* at different nitrogen species concentrations. Abundance is shown at both the genome and expression level.
+<br><br>
+
+The presence and expression of the *norC* gene was only positively associated with NH4 levels, while all other correlations revealed negative trends.
 
 ```{r}
+# Initialize a data frame
 RNA_abundance = data.frame(matrix(ncol = 5, nrow= 0))
 
 for (type_nutrient in unique(gene_abd_depth_meta$Type_Nutrient)) {
-  # get the summary of lm()
+  # Get the summary of lm()
   summ = gene_abd_depth_meta %>%
     filter(Type_Nutrient == type_nutrient) %>% 
     lm(Abundance ~ uM, .) %>%
     summary()
-  # pull out the stats values of the slope
+  # Pull out the statistics values
   coef = summ$coefficients["uM",]
-  # convert into a data frame
+  # Convert into a data frame
   coef_data_frame = data.frame(coef=matrix(coef),row.names=names(coef))
-  # add to table
-  RNA_abundance[nrow(RNA_abundance) + 1,] <-c(type_nutrient, round(coef_data_frame[,1], 4))
+  # Add to data frame for table
+  RNA_abundance[nrow(RNA_abundance) + 1,] <-c(type_nutrient, round(coef_data_frame[,1], 3))
 }
-
+# Reverse order to agree with graphs
+RNA_abundance = RNA_abundance[nrow(RNA_abundance):1,]
+# Name the columns
 colnames(RNA_abundance) <- (c("Correlation", "Estimate", "Std. Error","t value","Pr(>|t|) (p-value)"))
-kable(RNA_abundance,caption="Table ??? Correlation of norC Abundance Across Nitrogen Species Concentrations.")
+# Make a table for the data
+kable(RNA_abundance,row.names=FALSE,caption="Table 1 Correlation of *norC* Abundance across Nitrogen Species and Oxygen Concentrations.")
 
 ```
 
-NorC expression was found to significantly correlate to NH4 levels (p = 0.0047). No other significant correlations were found at either the genome or the expression level.  
+*NorC* expression was found to significantly positively correlate with NH4 levels (p = 0.005). No other significant correlations were observed at either the genome or the expression level.  
 
-Expression level significances (p = 0.0047-0.2728) were also higher than those of the genome level (p = 0.2021-0.9512). 
+Expression level significances (ranging p = 0.005-0.273) were generally higher than those of the genome level (ranging p = 0.202-0.951). 
+
+# Appendix
+
+![](itol_rna_zoom.png)
+**Figure A1**
+FPKM RNA abundance (coloured bars from purple to red) of *norC* expression across sample depth with respect to taxonomic assignments. Selected clades are numbered (1: Gammaproteobacteria; 2: Epsilonproteobacteria; 3: Ardenticatenia; 4: Clostridia; 5: Negativicutes). FPKM bar heights are relative within the same colour only. NorC expression is not observed in species outside of what is shown.  
+<br><br>

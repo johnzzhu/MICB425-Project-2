@@ -78,7 +78,7 @@ TreeSAPP output data found under `treesapp_out/iTOL_output/` was visualized in a
  
 ### R setup
  
-Analysis was completed in R v3.4.3 [???] using the following packages.
+Analysis was completed in R v3.4.3 [13] using the following packages.
 ```{r eval=TRUE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(cowplot)
